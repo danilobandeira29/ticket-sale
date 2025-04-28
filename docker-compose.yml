@@ -1,0 +1,9 @@
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+    environment:
+      - GO_ENV=development
+    volumes:
+      - .:/app
