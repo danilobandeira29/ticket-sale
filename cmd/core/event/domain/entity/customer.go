@@ -2,7 +2,7 @@ package entity
 
 import (
 	"fmt"
-	"github.com/danilobandeira29/ddd-go/cmd/core/shared/domain"
+	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 	"github.com/google/uuid"
 )
 
