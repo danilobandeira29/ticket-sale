@@ -1,4 +1,4 @@
-module github.com/danilobandeira29/ddd-go
+module github.com/danilobandeira29/ticket-sale
 
 go 1.24
 
