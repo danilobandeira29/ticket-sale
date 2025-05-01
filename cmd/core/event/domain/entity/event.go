@@ -1,0 +1,88 @@
+package entity
+
+import (
+	"fmt"
+	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
+	"time"
+)
+
+type EventID = domain.UUID
+
+type Event struct {
+	aggregate          domain.AggregateRoot
+	ID                 EventID
+	Name, Description  string
+	Date               time.Time
+	IsPublished        bool
+	TotalSpots         int32
+	TotalSpotsReserved int32
+	PartnerID          PartnerID
+}
+
+type EventProps struct {
+	ID                             *EventID
+	Name, Description              string
+	TotalSpots, TotalSpotsReserved int32
+	PartnerID                      *PartnerID
+	IsPublished                    bool
+	Date                           time.Time
+}
+
+func NewEvent(props EventProps) (*Event, error) {
+	var id EventID
+	if props.ID != nil {
+		id = *props.ID
+	} else {
+		i, err := domain.NewUUID()
+		if err != nil {
+			return nil, fmt.Errorf("new event: creating id: %v", err)
+		}
+		id = *i
+	}
+	var partnerID PartnerID
+	if props.PartnerID != nil {
+		partnerID = *props.PartnerID
+	} else {
+		i, err := domain.NewUUID()
+		if err != nil {
+			return nil, fmt.Errorf("new event: creating partner id: %v", err)
+		}
+		partnerID = *i
+	}
+	return &Event{
+		aggregate:          domain.AggregateRoot{},
+		ID:                 id,
+		Name:               props.Name,
+		Description:        props.Description,
+		Date:               props.Date,
+		IsPublished:        props.IsPublished,
+		TotalSpots:         props.TotalSpots,
+		TotalSpotsReserved: props.TotalSpotsReserved,
+		PartnerID:          partnerID,
+	}, nil
+}
+
+type CreateEventCommand struct {
+	Name        string
+	Description *string
+	Date        time.Time
+	PartnerID   PartnerID
+}
+
+func CreateEvent(command CreateEventCommand) (*Event, error) {
+	id, err := domain.NewUUID()
+	if err != nil {
+		return nil, fmt.Errorf("create event: creating id: %v", err)
+	}
+	return &Event{
+		aggregate:          domain.AggregateRoot{},
+		ID:                 *id,
+		Name:               command.Name,
+		Description:        *command.Description,
+		Date:               command.Date,
+		IsPublished:        false,
+		TotalSpots:         0,
+		TotalSpotsReserved: 0,
+		PartnerID:          command.PartnerID,
+	}, nil
+}
