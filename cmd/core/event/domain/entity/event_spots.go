@@ -43,8 +43,13 @@ func NewEventSpot(props EventSpotProps) (*EventSpot, error) {
 }
 
 func CreateEventSpot() (*EventSpot, error) {
+	id, err := domain.NewUUID()
+	if err != nil {
+		return nil, fmt.Errorf("create event spot: creating id: %v", err)
+	}
 	return &EventSpot{
 		entity:      domain.Entity{},
+		ID:          *id,
 		Location:    nil,
 		IsPublished: false,
 		IsReserved:  false,

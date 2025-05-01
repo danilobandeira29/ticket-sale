@@ -11,13 +11,17 @@ type EventID = domain.UUID
 type Event struct {
 	aggregate          domain.AggregateRoot
 	ID                 EventID
-	Name, Description  string
+	Name               string
+	Description        *string
 	Date               time.Time
 	IsPublished        bool
 	TotalSpots         int32
 	TotalSpotsReserved int32
 	PartnerID          PartnerID
+	Sections           EventSectionSet
 }
+
+type EventSectionSet = domain.Set[string, EventSection]
 
 type EventProps struct {
 	ID                             *EventID
@@ -26,6 +30,7 @@ type EventProps struct {
 	PartnerID                      *PartnerID
 	IsPublished                    bool
 	Date                           time.Time
+	EventSectionSet                EventSectionSet
 }
 
 func NewEvent(props EventProps) (*Event, error) {
@@ -53,12 +58,13 @@ func NewEvent(props EventProps) (*Event, error) {
 		aggregate:          domain.AggregateRoot{},
 		ID:                 id,
 		Name:               props.Name,
-		Description:        props.Description,
+		Description:        &props.Description,
 		Date:               props.Date,
 		IsPublished:        props.IsPublished,
 		TotalSpots:         props.TotalSpots,
 		TotalSpotsReserved: props.TotalSpotsReserved,
 		PartnerID:          partnerID,
+		Sections:           props.EventSectionSet,
 	}, nil
 }
 
@@ -78,11 +84,16 @@ func CreateEvent(command CreateEventCommand) (*Event, error) {
 		aggregate:          domain.AggregateRoot{},
 		ID:                 *id,
 		Name:               command.Name,
-		Description:        *command.Description,
+		Description:        command.Description,
 		Date:               command.Date,
 		IsPublished:        false,
 		TotalSpots:         0,
 		TotalSpotsReserved: 0,
 		PartnerID:          command.PartnerID,
+		Sections:           *domain.NewSet[string, EventSection](),
 	}, nil
+}
+
+func (e *Event) String() string {
+	return e.aggregate.String(e)
 }

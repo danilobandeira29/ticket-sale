@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 )
@@ -31,4 +32,8 @@ func (u UUID) String() string {
 
 func (u UUID) Equal(o UUID) bool {
 	return u.uid.String() == o.uid.String()
+}
+
+func (u UUID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.uid.String())
 }

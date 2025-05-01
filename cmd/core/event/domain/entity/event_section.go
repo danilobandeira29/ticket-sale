@@ -10,12 +10,16 @@ type EventSectionID = domain.UUID
 type EventSection struct {
 	entity             domain.Entity
 	ID                 EventSectionID
-	Name, Description  string
+	Name               string
+	Description        *string
 	IsPublished        bool
 	TotalSpots         int32
 	TotalSpotsReserved int32
 	Price              float64
+	Spots              EventSpotSet
 }
+
+type EventSpotSet = domain.Set[string, EventSpot]
 
 type EventSectionProps struct {
 	ID                             *EventSectionID
@@ -23,6 +27,8 @@ type EventSectionProps struct {
 	Description                    *string
 	TotalSpots, TotalSpotsReserved int32
 	IsPublished                    bool
+	Price                          float64
+	Spots                          EventSpotSet
 }
 
 func NewEventSection(props EventSectionProps) (*EventSection, error) {
@@ -40,10 +46,12 @@ func NewEventSection(props EventSectionProps) (*EventSection, error) {
 		entity:             domain.Entity{},
 		ID:                 id,
 		Name:               props.Name,
-		Description:        *props.Description,
+		Description:        props.Description,
 		IsPublished:        props.IsPublished,
 		TotalSpots:         props.TotalSpots,
 		TotalSpotsReserved: props.TotalSpotsReserved,
+		Price:              props.Price,
+		Spots:              *domain.NewSet[string, EventSpot](),
 	}, nil
 }
 
@@ -63,10 +71,15 @@ func CreateEventSection(command CreateEventSectionCommand) (*EventSection, error
 		entity:             domain.Entity{},
 		ID:                 *id,
 		Name:               command.Name,
-		Description:        *command.Description,
+		Description:        command.Description,
 		IsPublished:        false,
 		TotalSpots:         command.TotalSpots,
 		TotalSpotsReserved: 0,
 		Price:              command.Price,
+		Spots:              *domain.NewSet[string, EventSpot](),
 	}, nil
+}
+
+func (e *EventSection) String() string {
+	return e.entity.String(e)
 }
