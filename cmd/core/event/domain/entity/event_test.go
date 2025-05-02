@@ -163,8 +163,6 @@ func TestEvent_PublishAll(t *testing.T) {
 		return
 	}
 	for _, section := range event.Sections.Data {
-		//b, _ := json.MarshalIndent(section, "", "    ")
-		//t.Log(string(b))
 		if !section.IsPublished {
 			t.Errorf("expected section to be published")
 			return
