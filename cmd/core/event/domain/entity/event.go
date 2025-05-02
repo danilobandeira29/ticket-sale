@@ -94,6 +94,28 @@ func CreateEvent(command CreateEventCommand) (*Event, error) {
 	}, nil
 }
 
+type AddSectionCommand struct {
+	Name        string
+	Description *string
+	TotalSpots  int32
+	Price       float64
+}
+
+func (e *Event) AddSection(command AddSectionCommand) error {
+	section, err := CreateEventSection(CreateEventSectionCommand{
+		Name:        command.Name,
+		Description: command.Description,
+		TotalSpots:  command.TotalSpots,
+		Price:       command.Price,
+	})
+	if err != nil {
+		return fmt.Errorf("add section: %v", err)
+	}
+	e.Sections.Add(section.ID.String(), *section)
+	e.TotalSpots += section.TotalSpots
+	return nil
+}
+
 func (e *Event) String() string {
 	return e.aggregate.String(e)
 }

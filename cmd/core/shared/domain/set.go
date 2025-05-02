@@ -20,3 +20,7 @@ func (s Set[T, V]) Exists(k T) bool {
 func (s Set[T, V]) Remove(k T) {
 	delete(s.Data, k)
 }
+
+func (s Set[T, V]) Size() int {
+	return len(s.Data)
+}

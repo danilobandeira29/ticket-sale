@@ -52,3 +52,83 @@ func TestCreateEvent_WithSectionAndSpot(t *testing.T) {
 		return
 	}
 }
+
+func TestEvent_AddSection(t *testing.T) {
+	partnerID, _ := domain.NewUUID()
+	event, err := CreateEvent(CreateEventCommand{
+		Name:        "Event Add Section",
+		Description: nil,
+		Date:        time.Now(),
+		PartnerID:   *partnerID,
+	})
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v", err)
+		return
+	}
+	if event.Sections.Size() != 0 {
+		t.Errorf("section size expected: 0\ngot: %d\n", event.Sections.Size())
+		return
+	}
+	err = event.AddSection(AddSectionCommand{
+		Name:        "",
+		Description: nil,
+		TotalSpots:  10,
+		Price:       66,
+	})
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v\n", err)
+		return
+	}
+	if event.TotalSpots != 10 {
+		t.Errorf("section size expected: 10\ngot: %d\n", event.TotalSpots)
+		return
+	}
+	err = event.AddSection(AddSectionCommand{
+		Name:        "Premium",
+		Description: nil,
+		TotalSpots:  5,
+		Price:       99,
+	})
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v\n", err)
+		return
+	}
+	if event.TotalSpots != 15 {
+		t.Errorf("section size expected: 15\ngot: %d\n", event.TotalSpots)
+		return
+	}
+}
+
+func TestCreateEvent_SpotsSize(t *testing.T) {
+	partnerID, _ := domain.NewUUID()
+	event, err := CreateEvent(CreateEventCommand{
+		Name:        "Event Spots Size",
+		Description: nil,
+		Date:        time.Now(),
+		PartnerID:   *partnerID,
+	})
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v", err)
+		return
+	}
+	if event.Sections.Size() != 0 {
+		t.Errorf("section size expected: 0\ngot: %d\n", event.Sections.Size())
+		return
+	}
+	err = event.AddSection(AddSectionCommand{
+		Name:        "Basic",
+		Description: nil,
+		TotalSpots:  10,
+		Price:       66,
+	})
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v\n", err)
+		return
+	}
+	for _, v := range event.Sections.Data {
+		if v.Spots.Size() != 10 {
+			t.Errorf("section spots size: expected: 10\ngot: %d\n", v.Spots.Size())
+			return
+		}
+	}
+}

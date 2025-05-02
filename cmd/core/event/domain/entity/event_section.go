@@ -67,7 +67,7 @@ func CreateEventSection(command CreateEventSectionCommand) (*EventSection, error
 	if err != nil {
 		return nil, fmt.Errorf("create event section: creating id: %v", err)
 	}
-	return &EventSection{
+	section := &EventSection{
 		entity:             domain.Entity{},
 		ID:                 *id,
 		Name:               command.Name,
@@ -77,7 +77,15 @@ func CreateEventSection(command CreateEventSectionCommand) (*EventSection, error
 		TotalSpotsReserved: 0,
 		Price:              command.Price,
 		Spots:              *domain.NewSet[string, EventSpot](),
-	}, nil
+	}
+	for range section.TotalSpots {
+		spot, errEventSpot := CreateEventSpot()
+		if errEventSpot != nil {
+			return nil, fmt.Errorf("create event section: creating spots: %v", errEventSpot)
+		}
+		section.Spots.Add(spot.ID.String(), *spot)
+	}
+	return section, nil
 }
 
 func (e *EventSection) String() string {
