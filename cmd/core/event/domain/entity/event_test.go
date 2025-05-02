@@ -41,12 +41,12 @@ func TestCreateEvent_WithSectionAndSpot(t *testing.T) {
 		t.Errorf("expected error create event spot to be empty\bgot: %v", err)
 		return
 	}
-	section.Spots.Add(spot.ID.String(), *spot)
+	section.Spots.Add(spot.ID.String(), spot)
 	if !section.Spots.Exists(spot.ID.String()) {
 		t.Errorf("expected spot to exists in section")
 		return
 	}
-	event.Sections.Add(section.ID.String(), *section)
+	event.Sections.Add(section.ID.String(), section)
 	if !event.Sections.Exists(section.ID.String()) {
 		t.Errorf("expected section to exists in event")
 		return
@@ -129,6 +129,51 @@ func TestCreateEvent_SpotsSize(t *testing.T) {
 		if v.Spots.Size() != 10 {
 			t.Errorf("section spots size: expected: 10\ngot: %d\n", v.Spots.Size())
 			return
+		}
+	}
+}
+
+func TestEvent_PublishAll(t *testing.T) {
+	partnerID, _ := domain.NewUUID()
+	event, _ := CreateEvent(CreateEventCommand{
+		Name:        "Event Spots Size",
+		Description: nil,
+		Date:        time.Now(),
+		PartnerID:   *partnerID,
+	})
+	if event.IsPublished {
+		t.Errorf("expected event to not be published")
+		return
+	}
+	_ = event.AddSection(AddSectionCommand{
+		Name:        "Basic",
+		Description: nil,
+		TotalSpots:  20,
+		Price:       999.99,
+	})
+	_ = event.AddSection(AddSectionCommand{
+		Name:        "Premium",
+		Description: nil,
+		TotalSpots:  5,
+		Price:       1999.99,
+	})
+	event.PublishAll()
+	if !event.IsPublished {
+		t.Errorf("expected event publish all")
+		return
+	}
+	for _, section := range event.Sections.Data {
+		//b, _ := json.MarshalIndent(section, "", "    ")
+		//t.Log(string(b))
+		if !section.IsPublished {
+			t.Errorf("expected section to be published")
+			return
+		}
+		for _, spot := range section.Spots.Data {
+			if !spot.IsPublished {
+				t.Errorf("expected spot to be published")
+				return
+			}
 		}
 	}
 }

@@ -21,7 +21,7 @@ type Event struct {
 	Sections           EventSectionSet
 }
 
-type EventSectionSet = domain.Set[string, EventSection]
+type EventSectionSet = domain.Set[string, *EventSection]
 
 type EventProps struct {
 	ID                             *EventID
@@ -90,7 +90,7 @@ func CreateEvent(command CreateEventCommand) (*Event, error) {
 		TotalSpots:         0,
 		TotalSpotsReserved: 0,
 		PartnerID:          command.PartnerID,
-		Sections:           *domain.NewSet[string, EventSection](),
+		Sections:           *domain.NewSet[string, *EventSection](),
 	}, nil
 }
 
@@ -111,11 +111,41 @@ func (e *Event) AddSection(command AddSectionCommand) error {
 	if err != nil {
 		return fmt.Errorf("add section: %v", err)
 	}
-	e.Sections.Add(section.ID.String(), *section)
+	e.Sections.Add(section.ID.String(), section)
 	e.TotalSpots += section.TotalSpots
 	return nil
 }
 
 func (e *Event) String() string {
 	return e.aggregate.String(e)
+}
+
+func (e *Event) ChangeDate(now, t time.Time) error {
+	if now.After(t) {
+		return fmt.Errorf("it is not possible to change the event date to a past date")
+	}
+	e.Date = t
+	return nil
+}
+
+func (e *Event) Publish() {
+	e.IsPublished = true
+}
+
+func (e *Event) Unpublish() {
+	e.IsPublished = false
+}
+
+func (e *Event) PublishAll() {
+	e.Publish()
+	for _, s := range e.Sections.Data {
+		s.PublishAll()
+	}
+}
+
+func (e *Event) UnpublishAll() {
+	e.Unpublish()
+	for _, s := range e.Sections.Data {
+		s.UnpublishAll()
+	}
 }

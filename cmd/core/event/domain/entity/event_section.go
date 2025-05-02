@@ -19,7 +19,7 @@ type EventSection struct {
 	Spots              EventSpotSet
 }
 
-type EventSpotSet = domain.Set[string, EventSpot]
+type EventSpotSet = domain.Set[string, *EventSpot]
 
 type EventSectionProps struct {
 	ID                             *EventSectionID
@@ -51,7 +51,7 @@ func NewEventSection(props EventSectionProps) (*EventSection, error) {
 		TotalSpots:         props.TotalSpots,
 		TotalSpotsReserved: props.TotalSpotsReserved,
 		Price:              props.Price,
-		Spots:              *domain.NewSet[string, EventSpot](),
+		Spots:              *domain.NewSet[string, *EventSpot](),
 	}, nil
 }
 
@@ -76,18 +76,40 @@ func CreateEventSection(command CreateEventSectionCommand) (*EventSection, error
 		TotalSpots:         command.TotalSpots,
 		TotalSpotsReserved: 0,
 		Price:              command.Price,
-		Spots:              *domain.NewSet[string, EventSpot](),
+		Spots:              *domain.NewSet[string, *EventSpot](),
 	}
 	for range section.TotalSpots {
 		spot, errEventSpot := CreateEventSpot()
 		if errEventSpot != nil {
 			return nil, fmt.Errorf("create event section: creating spots: %v", errEventSpot)
 		}
-		section.Spots.Add(spot.ID.String(), *spot)
+		section.Spots.Add(spot.ID.String(), spot)
 	}
 	return section, nil
 }
 
 func (e *EventSection) String() string {
 	return e.entity.String(e)
+}
+
+func (e *EventSection) Publish() {
+	e.IsPublished = true
+}
+
+func (e *EventSection) Unpublish() {
+	e.IsPublished = false
+}
+
+func (e *EventSection) PublishAll() {
+	e.Publish()
+	for _, s := range e.Spots.Data {
+		s.Publish()
+	}
+}
+
+func (e *EventSection) UnpublishAll() {
+	e.Unpublish()
+	for _, s := range e.Spots.Data {
+		s.Unpublish()
+	}
 }

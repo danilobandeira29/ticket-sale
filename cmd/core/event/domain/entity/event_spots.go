@@ -59,3 +59,11 @@ func CreateEventSpot() (*EventSpot, error) {
 func (e *EventSpot) String() string {
 	return e.entity.String(e)
 }
+
+func (e *EventSpot) Publish() {
+	e.IsPublished = true
+}
+
+func (e *EventSpot) Unpublish() {
+	e.IsPublished = false
+}
