@@ -7,3 +7,20 @@ services:
       - GO_ENV=development
     volumes:
       - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: app_db
+    image: postgres
+    ports:
+      - "5436:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
