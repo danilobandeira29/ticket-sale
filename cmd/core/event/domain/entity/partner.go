@@ -9,9 +9,8 @@ import (
 type PartnerID = domain.UUID
 
 type Partner struct {
-	aggregate domain.AggregateRoot
-	Name      string
-	ID        PartnerID
+	Name string
+	ID   PartnerID
 }
 
 func CreatePartner(n string) (*Partner, error) {
