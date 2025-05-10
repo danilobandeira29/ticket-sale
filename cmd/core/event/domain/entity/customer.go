@@ -5,16 +5,7 @@ import (
 	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 )
 
-type CustomerID struct {
-	vo domain.UUID
-}
-
-func (c CustomerID) String() string {
-	return c.vo.String()
-}
-func (c CustomerID) Equal(o CustomerID) bool {
-	return c.vo.Equal(o.vo)
-}
+type CustomerID = domain.UUID
 
 type Customer struct {
 	aggregate domain.AggregateRoot
@@ -37,7 +28,7 @@ func NewCustomer(id, cpf, name string) (*Customer, error) {
 		return nil, fmt.Errorf("new customer: creating id %v", err)
 	}
 	return &Customer{
-		ID:   CustomerID{vo: *i},
+		ID:   *i,
 		CPF:  c,
 		Name: domain.NewName(name),
 	}, nil
@@ -53,7 +44,7 @@ func CreateCustomer(cpf, name string) (*Customer, error) {
 		return nil, fmt.Errorf("new customer: creating cpf %v", err)
 	}
 	return &Customer{
-		ID:   CustomerID{vo: *id},
+		ID:   *id,
 		CPF:  c,
 		Name: domain.NewName(name),
 	}, nil
