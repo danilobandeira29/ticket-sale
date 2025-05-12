@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/event/domain/entity"
+	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 )
 
 type CustomerRepository struct {
@@ -61,6 +62,6 @@ func (c CustomerRepository) Delete(id any) error {
 	return nil
 }
 
-func NewCustomerRepository(executor Executor) *CustomerRepository {
+func NewCustomerRepository(executor Executor) domain.Repository[entity.Customer] {
 	return &CustomerRepository{executor: executor}
 }
