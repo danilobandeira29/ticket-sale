@@ -37,9 +37,63 @@ func (p *EventRepository) FindAll() (result []*entity.Event, err error) {
 }
 
 func (p *EventRepository) Save(event *entity.Event) error {
-	_, err := p.executor.Exec("insert into events(id, name) values ($1, $2);", event.ID.String(), event.Name)
+	_, err := p.executor.Exec(`
+		insert into events(
+			id, 
+			name, 
+			description, 
+			date, 
+			is_published, 
+			partner_id, 
+			total_spots, 
+			total_spots_reserved
+		) values ($1, $2, $3, $4, $5, $6, $7, $8);`, event.ID.String(), event.Name, event.Description, event.Date, event.IsPublished, event.PartnerID.String(), event.TotalSpots, event.TotalSpotsReserved)
 	if err != nil {
 		return fmt.Errorf("event repository: exec %v", err)
+	}
+	for _, section := range event.Sections.Data {
+		_, errSection := p.executor.Exec(`
+			insert into event_sections(
+				id,
+				name,
+				description,
+				is_published,
+				total_spots,
+				total_spots_reserved,
+				price,
+				event_id
+			) values ($1, $2, $3, $4, $5, $6, $7, $8);`,
+			section.ID.String(),
+			section.Name,
+			section.Description,
+			section.IsPublished,
+			section.TotalSpots,
+			section.TotalSpotsReserved,
+			section.Price,
+			event.ID.String(),
+		)
+		if errSection != nil {
+			return fmt.Errorf("event repository: save section: %w", errSection)
+		}
+		for _, spot := range section.Spots.Data {
+			_, errSpot := p.executor.Exec(`
+				insert into event_spots(
+					id,
+					event_section_id,
+					location,
+					is_published,
+					is_reserved
+				) values ($1, $2, $3, $4, $5);`,
+				spot.ID.String(),
+				section.ID.String(),
+				spot.Location,
+				spot.IsPublished,
+				spot.IsReserved,
+			)
+			if errSpot != nil {
+				return fmt.Errorf("event repository: save spot: %w", errSpot)
+			}
+		}
 	}
 	return nil
 }

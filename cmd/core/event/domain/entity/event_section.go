@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
+	"strconv"
 )
 
 type EventSectionID = domain.UUID
@@ -78,12 +79,13 @@ func CreateEventSection(command CreateEventSectionCommand) (*EventSection, error
 		Price:              command.Price,
 		Spots:              *domain.NewSet[string, *EventSpot](),
 	}
-	for range section.TotalSpots {
-		spot, errEventSpot := CreateEventSpot()
+	for i := range section.TotalSpots {
+		idx := strconv.Itoa(int(i + 1))
+		spot, errEventSpot := CreateEventSpot(idx)
 		if errEventSpot != nil {
 			return nil, fmt.Errorf("create event section: creating spots: %v", errEventSpot)
 		}
-		section.Spots.Add(spot.ID.String(), spot)
+		section.Spots.Add(idx, spot)
 	}
 	return section, nil
 }

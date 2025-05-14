@@ -36,7 +36,7 @@ func TestCreateEvent_WithSectionAndSpot(t *testing.T) {
 		t.Errorf("expected section's spots to have len 0")
 		return
 	}
-	spot, err := CreateEventSpot()
+	spot, err := CreateEventSpot("1")
 	if err != nil {
 		t.Errorf("expected error create event spot to be empty\bgot: %v", err)
 		return

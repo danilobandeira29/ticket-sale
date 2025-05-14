@@ -10,8 +10,8 @@ type CustomerID = domain.UUID
 type Customer struct {
 	aggregate domain.AggregateRoot
 	ID        CustomerID
-	CPF       domain.CPF
-	Name      domain.Name
+	CPF       *domain.CPF
+	Name      *domain.Name
 }
 
 func (c *Customer) String() string {

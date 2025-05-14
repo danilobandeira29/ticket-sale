@@ -22,7 +22,7 @@ var (
 	cpfSecondDigitTable = []int{11, 10, 9, 8, 7, 6, 5, 4, 3, 2}
 )
 
-func NewCPF(v string) (CPF, error) {
+func NewCPF(v string) (*CPF, error) {
 	cpfSanitized := strings.Map(func(r rune) rune {
 		if unicode.IsDigit(r) {
 			return r
@@ -30,28 +30,38 @@ func NewCPF(v string) (CPF, error) {
 		return -1
 	}, v)
 	if len(cpfSanitized) != 11 {
-		return CPF{}, ErrCPFLength
+		return &CPF{}, ErrCPFLength
 	}
 	if !xp.MatchString(v) {
-		return CPF{}, fmt.Errorf("%w: %s", ErrCPFInvalidFormat, v)
+		return &CPF{}, fmt.Errorf("%w: %s", ErrCPFInvalidFormat, v)
 	}
 	digits := xp.FindStringSubmatch(v)
 	allDigitsEquals := strings.Count(cpfSanitized, string(cpfSanitized[0])) == len(cpfSanitized)
 	if allDigitsEquals {
-		return CPF{}, ErrCPFInvalid
+		return &CPF{}, ErrCPFInvalid
 	}
 	if !isValidCPF(cpfSanitized) {
-		return CPF{}, ErrCPFInvalid
+		return &CPF{}, ErrCPFInvalid
 	}
-	return CPF{value: fmt.Sprintf("%s.%s.%s-%s", digits[1], digits[2], digits[3], digits[4])}, nil
+	return &CPF{value: fmt.Sprintf("%s.%s.%s-%s", digits[1], digits[2], digits[3], digits[4])}, nil
 }
 
-func (v CPF) Value() string {
+func (v *CPF) Value() string {
 	return v.value
 }
 
-func (v CPF) Equal(o CPF) bool {
+func (v *CPF) Equal(o *CPF) bool {
 	return v.value == o.value
+}
+
+func (v *CPF) Scan(src any) error {
+	switch source := src.(type) {
+	case string:
+		v.value = source
+		return nil
+	default:
+		return fmt.Errorf("cannot scan CPF from %T", source)
+	}
 }
 
 func isValidCPF(cpf string) bool {
