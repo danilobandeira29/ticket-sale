@@ -45,12 +45,16 @@ func (p *PartnerRepository) Save(partner *entity.Partner) error {
 }
 
 func (p *PartnerRepository) FindByID(id any) (*entity.Partner, error) {
-	// todo: need to use this id
-	_, ok := id.(entity.PartnerID)
+	partnerID, ok := id.(string)
 	if !ok {
-		return nil, fmt.Errorf("partnert repository: find by id: invalid id: %T", id)
+		return nil, fmt.Errorf("partner repository: find by id: invalid id: %T", id)
 	}
-	return nil, nil
+	row := p.executor.QueryRow("select id, name from partners where id = $1", partnerID)
+	var partner entity.Partner
+	if err := row.Scan(&partner.ID, &partner.Name); err != nil {
+		return nil, fmt.Errorf("partner repository find by id: scanning: %v", err)
+	}
+	return &partner, nil
 }
 
 func (p *PartnerRepository) Delete(id any) error {
