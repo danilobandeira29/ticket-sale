@@ -52,7 +52,7 @@ func NewEventSection(props EventSectionProps) (*EventSection, error) {
 		TotalSpots:         props.TotalSpots,
 		TotalSpotsReserved: props.TotalSpotsReserved,
 		Price:              props.Price,
-		Spots:              *domain.NewSet[string, *EventSpot](),
+		Spots:              props.Spots,
 	}, nil
 }
 

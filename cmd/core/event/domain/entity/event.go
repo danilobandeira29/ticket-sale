@@ -25,7 +25,8 @@ type EventSectionSet = domain.Set[string, *EventSection]
 
 type EventProps struct {
 	ID                             *EventID
-	Name, Description              string
+	Name                           string
+	Description                    *string
 	TotalSpots, TotalSpotsReserved int32
 	PartnerID                      *PartnerID
 	IsPublished                    bool
@@ -58,7 +59,7 @@ func NewEvent(props EventProps) (*Event, error) {
 		aggregate:          domain.AggregateRoot{},
 		ID:                 id,
 		Name:               props.Name,
-		Description:        &props.Description,
+		Description:        props.Description,
 		Date:               props.Date,
 		IsPublished:        props.IsPublished,
 		TotalSpots:         props.TotalSpots,

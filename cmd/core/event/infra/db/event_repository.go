@@ -100,11 +100,91 @@ func (p *EventRepository) Save(event *entity.Event) error {
 
 func (p *EventRepository) FindByID(id any) (*entity.Event, error) {
 	// todo: need to use this id
-	_, ok := id.(entity.EventID)
+	eventID, ok := id.(string)
 	if !ok {
 		return nil, fmt.Errorf("event repository: find by id: invalid id: %T", id)
 	}
-	return nil, nil
+	var event entity.Event
+	err := p.executor.QueryRow(`
+		SELECT id, name, description, date, is_published, total_spots, total_spots_reserved, partner_id
+		FROM events WHERE id = $1
+	`, eventID).Scan(&event.ID, &event.Name, &event.Description, &event.Date, &event.IsPublished, &event.TotalSpots, &event.TotalSpotsReserved, &event.PartnerID)
+	if err != nil {
+		return nil, fmt.Errorf("event repository: find by id queryrow: %v", err)
+	}
+	rows, err := p.executor.Query(`
+		SELECT id, name, description, is_published, total_spots, total_spots_reserved, price
+		FROM event_sections WHERE event_id = $1
+	`, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("event repository: find sections: %v", err)
+	}
+	defer rows.Close()
+	sections := domain.NewSet[string, *entity.EventSection]()
+	for rows.Next() {
+		var section entity.EventSection
+		err = rows.Scan(&section.ID, &section.Name, &section.Description, &section.IsPublished, &section.TotalSpots, &section.TotalSpotsReserved, &section.Price)
+		if err != nil {
+			return nil, fmt.Errorf("event repository: scan section: %v", err)
+		}
+		spotsRows, err := p.executor.Query(`
+			SELECT id, location, is_published, is_reserved
+			FROM event_spots
+			WHERE event_section_id = $1
+		`, section.ID.String())
+		if err != nil {
+			return nil, fmt.Errorf("event repository: find spots: %v", err)
+		}
+		eventSpotSet := domain.NewSet[string, *entity.EventSpot]()
+		for spotsRows.Next() {
+			var spot entity.EventSpot
+			err = spotsRows.Scan(&spot.ID, &spot.Location, &spot.IsPublished, &spot.IsReserved)
+			if err != nil {
+				spotsRows.Close()
+				return nil, fmt.Errorf("event repository: scan spot: %v", err)
+			}
+			eventSpot, err := entity.NewEventSpot(entity.EventSpotProps{
+				ID:          &spot.ID,
+				Location:    spot.Location,
+				IsReserved:  spot.IsReserved,
+				IsPublished: spot.IsPublished,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("event repository: new event spot: %v", err)
+			}
+			eventSpotSet.Add(spot.ID.String(), eventSpot)
+		}
+		spotsRows.Close()
+		sec, err := entity.NewEventSection(entity.EventSectionProps{
+			ID:                 &section.ID,
+			Name:               section.Name,
+			Description:        section.Description,
+			TotalSpots:         section.TotalSpots,
+			TotalSpotsReserved: section.TotalSpotsReserved,
+			IsPublished:        section.IsPublished,
+			Price:              section.Price,
+			Spots:              *eventSpotSet,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("event repository: create section entity: %v", err)
+		}
+		sections.Add(section.ID.String(), sec)
+	}
+	entityEvent, err := entity.NewEvent(entity.EventProps{
+		ID:                 &event.ID,
+		Name:               event.Name,
+		Description:        event.Description,
+		Date:               event.Date,
+		IsPublished:        event.IsPublished,
+		TotalSpots:         event.TotalSpots,
+		TotalSpotsReserved: event.TotalSpotsReserved,
+		PartnerID:          &event.PartnerID,
+		EventSectionSet:    *sections,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("event repository: create event entity: %v", err)
+	}
+	return entityEvent, nil
 }
 
 func (p *EventRepository) Delete(id any) error {

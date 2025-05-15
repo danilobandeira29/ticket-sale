@@ -45,10 +45,10 @@ func (e *EventService) FindSections(eventID string) ([]*entity.EventSection, err
 	return result, nil
 }
 
-func (e *EventService) Create(input CreateInput) error {
+func (e *EventService) Create(input CreateInput) (*string, error) {
 	partner, err := e.partnerRepo.FindByID(input.PartnerID)
 	if err != nil {
-		return fmt.Errorf("event service create: %v", err)
+		return nil, fmt.Errorf("event service create: %v", err)
 	}
 	event, err := partner.CreateEvent(entity.PartnerCreateEvent{
 		Name:        input.Name,
@@ -56,7 +56,7 @@ func (e *EventService) Create(input CreateInput) error {
 		Date:        input.Date,
 	})
 	if err = e.uow.Begin(); err != nil {
-		return fmt.Errorf("event service create: begin event: %v", err)
+		return nil, fmt.Errorf("event service create: begin event: %v", err)
 	}
 	err = e.uow.Do(func(u application.UnitOfWork) error {
 		eventRepo, errR := u.Repository("EventRepository")
@@ -71,9 +71,30 @@ func (e *EventService) Create(input CreateInput) error {
 	})
 	if err != nil {
 		if errRoll := e.uow.Rollback(); errRoll != nil {
-			return fmt.Errorf("event service: rollback: %v", errRoll)
+			return nil, fmt.Errorf("event service: rollback: %v", errRoll)
 		}
-		return fmt.Errorf("event service doing: %v", err)
+		return nil, fmt.Errorf("event service doing: %v", err)
 	}
-	return e.uow.Commit()
+	if err := e.uow.Commit(); err != nil {
+		return nil, fmt.Errorf("event service commit: %v", err)
+	}
+	eventID := event.ID.String()
+	return &eventID, nil
+}
+
+type AddSectionInput struct {
+	Name        string
+	Description *string
+	TotalSpots  int32
+	Price       float64
+	EventID     string
+}
+
+func (e *EventService) AddSection(input AddSectionInput) error {
+	event, err := e.eventRepo.FindByID(input.EventID)
+	if err != nil {
+		return fmt.Errorf("event service add section find by id: %v", err)
+	}
+	fmt.Println(event)
+	return err
 }
