@@ -95,6 +95,68 @@ func (e *EventService) AddSection(input AddSectionInput) error {
 	if err != nil {
 		return fmt.Errorf("event service add section find by id: %v", err)
 	}
-	fmt.Println(event)
-	return err
+	err = event.AddSection(entity.AddSectionCommand{
+		Name:        input.Name,
+		Description: input.Description,
+		TotalSpots:  input.TotalSpots,
+		Price:       input.Price,
+	})
+	if err != nil {
+		return fmt.Errorf("event service add section: %v", err)
+	}
+	if errB := e.uow.Begin(); errB != nil {
+		return fmt.Errorf("event service begin: %v", err)
+	}
+	if errDo := e.uow.Do(func(u application.UnitOfWork) error {
+		repository, errR := u.Repository("EventRepository")
+		if errR != nil {
+			return fmt.Errorf("event service repository: %v", errR)
+		}
+		repo := repository.(domain.Repository[entity.Event])
+		return repo.Save(event)
+	}); errDo != nil {
+		if errR := e.uow.Rollback(); errR != nil {
+			return fmt.Errorf("event service rollback: %v", errR)
+		}
+		return fmt.Errorf("event service do: %v", errDo)
+	}
+	return e.uow.Commit()
+}
+
+type ChangeSectionInfo struct {
+	EventID           string
+	SectionID         string
+	Name, Description *string
+}
+
+func (e *EventService) ChangeSectionInfo(input ChangeSectionInfo) error {
+	event, err := e.eventRepo.FindByID(input.EventID)
+	if err != nil {
+		return fmt.Errorf("event service change section info: %v", err)
+	}
+	sectionID, err := domain.NewUUIDFromString(input.SectionID)
+	if err != nil {
+		return fmt.Errorf("event service change section info: generate uuid %v", err)
+	}
+	if err = event.ChangeSectionInfo(entity.ChangeSectionInput{
+		SectionID:   *sectionID,
+		Name:        input.Name,
+		Description: input.Description,
+	}); err != nil {
+		return fmt.Errorf("event service change section info: changing %v", err)
+	}
+	if err = e.uow.Begin(); err != nil {
+		return fmt.Errorf("event service change section info: begin %v", err)
+	}
+	if err = e.uow.Do(func(u application.UnitOfWork) error {
+		repository, errR := u.Repository("EventRepository")
+		if errR != nil {
+			return errR
+		}
+		repo := repository.(domain.Repository[entity.Event])
+		return repo.Save(event)
+	}); err != nil {
+		return fmt.Errorf("event service change section info: do %v", err)
+	}
+	return e.uow.Commit()
 }

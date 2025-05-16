@@ -109,6 +109,14 @@ func (e *EventSection) PublishAll() {
 	}
 }
 
+func (e *EventSection) ChangeName(n string) {
+	e.Name = n
+}
+
+func (e *EventSection) ChangeDescription(n string) {
+	e.Description = &n
+}
+
 func (e *EventSection) UnpublishAll() {
 	e.Unpublish()
 	for _, s := range e.Spots.Data {

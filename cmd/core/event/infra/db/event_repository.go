@@ -47,7 +47,16 @@ func (p *EventRepository) Save(event *entity.Event) error {
 			partner_id, 
 			total_spots, 
 			total_spots_reserved
-		) values ($1, $2, $3, $4, $5, $6, $7, $8);`, event.ID.String(), event.Name, event.Description, event.Date, event.IsPublished, event.PartnerID.String(), event.TotalSpots, event.TotalSpotsReserved)
+		) values ($1, $2, $3, $4, $5, $6, $7, $8)
+		on conflict (id) do update set
+			name = excluded.name,
+			description = excluded.description, 
+			date = excluded.date, 
+			is_published = excluded.is_published, 
+			partner_id = excluded.partner_id, 
+			total_spots = excluded.total_spots, 
+			total_spots_reserved = excluded.total_spots_reserved;
+		`, event.ID.String(), event.Name, event.Description, event.Date, event.IsPublished, event.PartnerID.String(), event.TotalSpots, event.TotalSpotsReserved)
 	if err != nil {
 		return fmt.Errorf("event repository: exec %v", err)
 	}
@@ -62,7 +71,15 @@ func (p *EventRepository) Save(event *entity.Event) error {
 				total_spots_reserved,
 				price,
 				event_id
-			) values ($1, $2, $3, $4, $5, $6, $7, $8);`,
+			) values ($1, $2, $3, $4, $5, $6, $7, $8)
+			on conflict (id) do update set
+				name = excluded.name,
+				description = excluded.description,
+				is_published = excluded.is_published,
+				total_spots = excluded.total_spots,
+				total_spots_reserved = excluded.total_spots_reserved,
+				price = excluded.price;
+			`,
 			section.ID.String(),
 			section.Name,
 			section.Description,
@@ -83,7 +100,12 @@ func (p *EventRepository) Save(event *entity.Event) error {
 					location,
 					is_published,
 					is_reserved
-				) values ($1, $2, $3, $4, $5);`,
+				) values ($1, $2, $3, $4, $5)
+				on conflict (id) do update set
+					location = excluded.location,
+					is_published = excluded.is_published,
+					is_reserved = excluded.is_reserved;
+				`,
 				spot.ID.String(),
 				section.ID.String(),
 				spot.Location,

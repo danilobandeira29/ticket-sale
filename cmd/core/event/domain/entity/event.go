@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 	"time"
@@ -149,4 +150,27 @@ func (e *Event) UnpublishAll() {
 	for _, s := range e.Sections.Data {
 		s.UnpublishAll()
 	}
+}
+
+type ChangeSectionInput struct {
+	SectionID         EventSectionID
+	Name, Description *string
+}
+
+func (e *Event) ChangeSectionInfo(command ChangeSectionInput) error {
+	if exists := e.Sections.Exists(command.SectionID.String()); !exists {
+		return errors.New("event change section info: section not found")
+	}
+	for _, s := range e.Sections.Data {
+		if s.ID != command.SectionID {
+			continue
+		}
+		if command.Name != nil {
+			s.ChangeName(*command.Name)
+		}
+		if command.Description != nil {
+			s.ChangeDescription(*command.Description)
+		}
+	}
+	return nil
 }
