@@ -23,10 +23,14 @@ type OrderStatus int
 
 const (
 	StatusPending OrderStatus = iota
+	StatusPaid
+	StatusCanceled
 )
 
 var orderStatus = map[OrderStatus]string{
-	StatusPending: "pending",
+	StatusPending:  "pending",
+	StatusPaid:     "paid",
+	StatusCanceled: "canceled",
 }
 
 func (o OrderStatus) String() string {
@@ -46,4 +50,12 @@ func NewOrder(props OrderProps) *Order {
 
 func (o *Order) String() string {
 	return o.aggregate.String(o)
+}
+
+func (o *Order) Pay() {
+	o.Status = StatusPaid
+}
+
+func (o *Order) Cancel() {
+	o.Status = StatusCanceled
 }
