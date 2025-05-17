@@ -43,6 +43,10 @@ func TestEventService_Create(t *testing.T) {
 		t.Errorf("event not created\nexpected: %s\ngot: %s", *eventID, result.ID.String())
 		return
 	}
+	if result.IsPublished {
+		t.Errorf("event should not be published when created")
+		return
+	}
 }
 
 func TestEventService_AddSection(t *testing.T) {
@@ -147,5 +151,55 @@ func TestEventService_ChangeSectionInfo(t *testing.T) {
 	if *e.Sections.Data[sectionID].Description != sectionDesc {
 		t.Errorf("wrong description \nexpected: %s\ngot: %s", sectionDesc, *e.Sections.Data[sectionID].Description)
 		return
+	}
+}
+
+func TestEventService_PublishAll(t *testing.T) {
+	conn, _ := db.PostgresConn()
+	partnerRepo := db.NewPartnerRepository(conn)
+	eventRepo := db.NewEventRepository(conn)
+	uow := unitofwork.NewUoW(conn)
+	uow.RegisterFactory("PartnerRepository", func(exec db.Executor) any {
+		return db.NewPartnerRepository(exec)
+	})
+	uow.RegisterFactory("EventRepository", func(exec db.Executor) any {
+		return db.NewEventRepository(exec)
+	})
+	partner, _ := entity.CreatePartner("Partner 1")
+	_ = partnerRepo.Save(partner)
+	event, _ := partner.CreateEvent(entity.PartnerCreateEvent{
+		Name:        "AddSection " + time.Now().Format(time.RFC3339),
+		Description: nil,
+		Date:        time.Now(),
+	})
+	_ = event.AddSection(entity.AddSectionCommand{
+		Name:        "Premium",
+		Description: nil,
+		TotalSpots:  100,
+		Price:       1999.97,
+	})
+	_ = eventRepo.Save(event)
+	service := NewEventService(eventRepo, partnerRepo, uow)
+	err := service.PublishAll(event.ID.String())
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v", err)
+		return
+	}
+	result, _ := eventRepo.FindByID(event.ID.String())
+	if !result.IsPublished {
+		t.Errorf("expected event to be published")
+		return
+	}
+	for _, section := range result.Sections.Data {
+		if !section.IsPublished {
+			t.Errorf("expected sections to be published")
+			return
+		}
+		for _, spot := range section.Spots.Data {
+			if !spot.IsPublished {
+				t.Errorf("expected spots to be published")
+				return
+			}
+		}
 	}
 }

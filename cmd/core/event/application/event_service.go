@@ -160,3 +160,25 @@ func (e *EventService) ChangeSectionInfo(input ChangeSectionInfo) error {
 	}
 	return e.uow.Commit()
 }
+
+func (e *EventService) PublishAll(eventID string) error {
+	event, err := e.eventRepo.FindByID(eventID)
+	if err != nil {
+		return fmt.Errorf("event service publish all finding: %v", err)
+	}
+	event.PublishAll()
+	if errB := e.uow.Begin(); errB != nil {
+		return fmt.Errorf("event service publish all being: %v", errB)
+	}
+	if errD := e.uow.Do(func(u application.UnitOfWork) error {
+		repository, errR := u.Repository("EventRepository")
+		if errR != nil {
+			return fmt.Errorf("event service publish all: repo: %v", errR)
+		}
+		repo := repository.(domain.Repository[entity.Event])
+		return repo.Save(event)
+	}); errD != nil {
+		return fmt.Errorf("event service publish all saving: %v", errD)
+	}
+	return e.uow.Commit()
+}
