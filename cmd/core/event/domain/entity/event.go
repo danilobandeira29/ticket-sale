@@ -152,6 +152,37 @@ func (e *Event) UnpublishAll() {
 	}
 }
 
+type AllowReserveSpotInput struct {
+	SectionID EventSectionID
+	SpotID    EventSpotID
+}
+
+func (e *Event) AllowReserveSpot(input AllowReserveSpotInput) (bool, error) {
+	if !e.IsPublished {
+		return false, errors.New("event allow reserve spot: event not published")
+	}
+	var section *EventSection
+	for _, s := range e.Sections.Data {
+		if s.ID.Equal(input.SectionID) {
+			section = s
+			break
+		}
+	}
+	if section == nil {
+		return false, errors.New("event allow reserve spot: section not found")
+	}
+	return section.AllowReserveSpot(input.SpotID)
+}
+
+func (e *Event) Section(id EventSectionID) (EventSection, error) {
+	for _, s := range e.Sections.Data {
+		if s.ID.Equal(id) {
+			return *s, nil
+		}
+	}
+	return EventSection{}, errors.New("section not found")
+}
+
 type ChangeSectionInput struct {
 	SectionID         EventSectionID
 	Name, Description *string

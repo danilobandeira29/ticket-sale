@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 	"strconv"
@@ -122,4 +123,24 @@ func (e *EventSection) UnpublishAll() {
 	for _, s := range e.Spots.Data {
 		s.Unpublish()
 	}
+}
+
+func (e *EventSection) AllowReserveSpot(spotID EventSpotID) (bool, error) {
+	var spot *EventSpot
+	for _, s := range e.Spots.Data {
+		if s.ID.Equal(spotID) {
+			spot = s
+			break
+		}
+	}
+	if spot == nil {
+		return false, errors.New("event section: spot not found")
+	}
+	if spot.IsReserved {
+		return false, errors.New("event section: spot is reserved")
+	}
+	if !spot.IsPublished {
+		return false, errors.New("event section: spot not published")
+	}
+	return true, nil
 }
