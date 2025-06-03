@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/event/domain/entity"
 	"testing"
+	"time"
 )
 
 func TestPostgresConn(t *testing.T) {
@@ -37,7 +38,7 @@ func TestPartnerRepository_Save(t *testing.T) {
 		return
 	}
 	repo := NewPartnerRepository(tx)
-	partner, _ := entity.CreatePartner("Danilo Bandeira")
+	partner, _ := entity.CreatePartner("Danilo Bandeira", time.Now())
 	err = repo.Save(partner)
 	if err != nil {
 		tx.Rollback()

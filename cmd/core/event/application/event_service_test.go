@@ -20,7 +20,11 @@ func TestEventService_Create(t *testing.T) {
 		return db.NewEventRepository(exec)
 	})
 	service := NewEventService(eventRepo, partnerRepo, uow)
-	partner, _ := entity.CreatePartner("Partner 1")
+	partner, err := entity.CreatePartner("Partner 1", time.Now())
+	if err != nil {
+		t.Errorf("expected error to be empty\ngot: %v\n", err)
+		return
+	}
 	_ = partnerRepo.Save(partner)
 	date, _ := time.Parse(time.RFC3339, "2030-01-01T10:00:00-03:00")
 	eventDescription := "Nice description"
@@ -61,7 +65,7 @@ func TestEventService_AddSection(t *testing.T) {
 		return db.NewEventRepository(exec)
 	})
 	service := NewEventService(eventRepo, partnerRepo, uow)
-	partner, _ := entity.CreatePartner("Partner 1")
+	partner, _ := entity.CreatePartner("Partner 1", time.Now())
 	_ = partnerRepo.Save(partner)
 	event, _ := partner.CreateEvent(entity.PartnerCreateEvent{
 		Name:        "AddSection " + time.Now().Format(time.RFC3339),
@@ -104,7 +108,7 @@ func TestEventService_ChangeSectionInfo(t *testing.T) {
 		return db.NewEventRepository(exec)
 	})
 	service := NewEventService(eventRepo, partnerRepo, uow)
-	partner, _ := entity.CreatePartner("Partner 1")
+	partner, _ := entity.CreatePartner("Partner 1", time.Now())
 	_ = partnerRepo.Save(partner)
 	event, _ := partner.CreateEvent(entity.PartnerCreateEvent{
 		Name:        "AddSection " + time.Now().Format(time.RFC3339),
@@ -165,7 +169,7 @@ func TestEventService_PublishAll(t *testing.T) {
 	uow.RegisterFactory("EventRepository", func(exec db.Executor) any {
 		return db.NewEventRepository(exec)
 	})
-	partner, _ := entity.CreatePartner("Partner 1")
+	partner, _ := entity.CreatePartner("Partner 1", time.Now())
 	_ = partnerRepo.Save(partner)
 	event, _ := partner.CreateEvent(entity.PartnerCreateEvent{
 		Name:        "AddSection " + time.Now().Format(time.RFC3339),

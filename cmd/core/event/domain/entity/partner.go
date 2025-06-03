@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"github.com/danilobandeira29/ticket-sale/cmd/core/event/domain/event"
 	"github.com/danilobandeira29/ticket-sale/cmd/core/shared/domain"
 	"time"
 )
@@ -9,16 +10,19 @@ import (
 type PartnerID = domain.UUID
 
 type Partner struct {
-	Name string
-	ID   PartnerID
+	aggregate *domain.AggregateRoot
+	Name      string
+	ID        PartnerID
 }
 
-func CreatePartner(n string) (*Partner, error) {
+func CreatePartner(n string, now time.Time) (*Partner, error) {
 	id, err := domain.NewUUID()
 	if err != nil {
 		return nil, fmt.Errorf("new partner: %v", err)
 	}
-	return &Partner{ID: *id, Name: n}, nil
+	p := &Partner{ID: *id, Name: n, aggregate: domain.NewAggregateRoot()}
+	p.aggregate.AddEvent(event.NewPartnerCreated(id.String(), now, 1))
+	return p, nil
 }
 
 type PartnerCreateEvent struct {

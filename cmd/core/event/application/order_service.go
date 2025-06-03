@@ -29,6 +29,7 @@ type OrderCreateInput struct {
 	EventID, SectionID, SpotID, CustomerID string
 }
 
+// TODO: quando a ordem de serviço falhar, mas não por motivo de reserva de lugar, então deve-se guardar no banco essa order
 func (o *OrderService) Create(input OrderCreateInput) (*entity.Order, error) {
 	var (
 		customer *entity.Customer

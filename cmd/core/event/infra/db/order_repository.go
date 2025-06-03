@@ -4,7 +4,15 @@ import (
 	"github.com/danilobandeira29/ticket-sale/cmd/core/event/domain/entity"
 )
 
-type OrderRepository struct{}
+type OrderRepository struct {
+	executor Executor
+}
+
+func NewOrderRepository(executor Executor) *OrderRepository {
+	return &OrderRepository{
+		executor: executor,
+	}
+}
 
 func (o *OrderRepository) Save(t *entity.Order) error {
 	//TODO implement me

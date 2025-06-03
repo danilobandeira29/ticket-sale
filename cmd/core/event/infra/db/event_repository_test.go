@@ -18,7 +18,7 @@ func TestEventRepository_Save(t *testing.T) {
 	repo := NewEventRepository(tx)
 	eventTime, _ := time.Parse(time.RFC3339, "2026-01-01T10:00:00-03:00")
 	partnerRepo := NewPartnerRepository(tx)
-	partner, _ := entity.CreatePartner("Partner")
+	partner, _ := entity.CreatePartner("Partner", time.Now())
 	_ = partnerRepo.Save(partner)
 	event, _ := partner.CreateEvent(entity.PartnerCreateEvent{
 		Name:        "Event 1",
