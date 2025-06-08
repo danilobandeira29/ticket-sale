@@ -10,7 +10,7 @@ import (
 type PartnerID = domain.UUID
 
 type Partner struct {
-	aggregate *domain.AggregateRoot
+	Aggregate *domain.AggregateRoot
 	Name      string
 	ID        PartnerID
 }
@@ -20,8 +20,8 @@ func CreatePartner(n string, now time.Time) (*Partner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("new partner: %v", err)
 	}
-	p := &Partner{ID: *id, Name: n, aggregate: domain.NewAggregateRoot()}
-	p.aggregate.AddEvent(event.NewPartnerCreated(id.String(), now, 1))
+	p := &Partner{ID: *id, Name: n, Aggregate: domain.NewAggregateRoot()}
+	p.Aggregate.AddEvent(event.NewPartnerCreated(id.String(), now, 1))
 	return p, nil
 }
 
